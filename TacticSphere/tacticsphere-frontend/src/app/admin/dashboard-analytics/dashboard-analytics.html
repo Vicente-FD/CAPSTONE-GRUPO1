@@ -1,0 +1,620 @@
+﻿<div class="ts-page">
+  <div class="ts-container space-y-6">
+    <!-- Card 1: Filtros -->
+    <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-6 animate-subtleUp">
+      <!-- Cabecera de la card -->
+      <div class="flex items-start gap-3">
+        <app-icon name="filter" size="lg" variant="default" class="flex-shrink-0 mt-0.5"></app-icon>
+        <div class="flex-1 space-y-1">
+          <h2 class="text-lg font-semibold text-ink">Filtros</h2>
+          <p class="text-sm text-neutral-500">Selecciona los criterios para analizar los datos de tu organización.</p>
+        </div>
+      </div>
+
+      <!-- Layout en dos columnas (desktop) / una columna (mobile) -->
+      <div class="grid gap-6 lg:grid-cols-2">
+        <!-- Columna izquierda: Datos -->
+        <div class="rounded-xl border border-gray-200 bg-gray-50 p-5 space-y-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#64748B]">Datos</p>
+          <div class="space-y-4">
+            <label class="block space-y-2">
+              <span class="ts-label text-sm font-semibold text-[#0F172A]">Empresa</span>
+              <select
+                class="ts-select rounded-xl border border-[#D7DFEA] bg-white px-4 py-2.5 text-[#1E293B] w-full"
+                [(ngModel)]="selectedCompanyId"
+                (ngModelChange)="onCompanyChange($event)"
+                [disabled]="isUser"
+                panelClass="ts-select-panel"
+              >
+                <option [ngValue]="null">Selecciona empresa...</option>
+                <option *ngIf="isAdminSistema" [ngValue]="'GLOBAL'">Global (todas las empresas)</option>
+                <option *ngFor="let company of companies(); trackBy: trackById" [ngValue]="company.id">{{ company.nombre }}</option>
+              </select>
+            </label>
+
+            <label class="block space-y-2">
+              <span class="ts-label text-sm font-semibold text-[#0F172A]">Departamento</span>
+              <select
+                class="ts-select rounded-xl border border-[#D7DFEA] bg-white px-4 py-2.5 text-[#1E293B] w-full"
+                [(ngModel)]="selectedDepartmentId"
+                (ngModelChange)="onDepartmentChange($event)"
+                panelClass="ts-select-panel"
+              >
+                <option [ngValue]="null">Todos los departamentos</option>
+                <option *ngFor="let dept of departments(); trackBy: trackById" [ngValue]="dept.id">{{ dept.nombre }}</option>
+              </select>
+            </label>
+
+            <label class="block space-y-2">
+              <span class="ts-label text-sm font-semibold text-[#0F172A]">Pilar</span>
+              <select
+                class="ts-select rounded-xl border border-[#D7DFEA] bg-white px-4 py-2.5 text-[#1E293B] w-full"
+                [(ngModel)]="selectedPillar"
+                (ngModelChange)="onPillarChange($event)"
+                panelClass="ts-select-panel"
+              >
+                <option [ngValue]="'ALL'">Todos los pilares</option>
+                <option *ngFor="let pillar of pillarOptions(); trackBy: trackByIndex" [ngValue]="pillar.pillar_id">
+                  {{ pillar.pillar_name }}
+                </option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- Columna derecha: Resumen de filtros -->
+        <div class="rounded-xl border border-gray-200 bg-gray-50 p-5 space-y-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#64748B]">Vista rápida</p>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-neutral-600">Empresa:</span>
+              <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700">
+                {{ quickCompanyLabel() }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-neutral-600">Departamento:</span>
+              <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700">
+                {{ quickDepartmentLabel() }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-neutral-600">Pilar:</span>
+              <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700">
+                {{ quickPillarLabel() }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Comparación -->
+      <div class="rounded-xl border border-gray-200 bg-gray-50 p-5 space-y-4">
+        <div class="space-y-1">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#64748B]">Comparación opcional</p>
+          <p class="text-sm text-neutral-500">Selecciona una empresa de referencia para comparar resultados.</p>
+        </div>
+        
+        <div class="space-y-4">
+          <label class="block space-y-2">
+            <span class="ts-label text-sm font-semibold text-[#0F172A]">Comparar con</span>
+            <select
+              class="ts-select rounded-xl border border-[#D7DFEA] bg-white px-4 py-2.5 text-[#1E293B] w-full"
+              [(ngModel)]="compareType"
+              (ngModelChange)="onCompareTypeChange($event)"
+              panelClass="ts-select-panel"
+            >
+              <option [ngValue]="null">Sin comparación</option>
+              <option [ngValue]="'DEPARTMENT'">Departamento</option>
+              <option [ngValue]="'EMPLOYEE'">Empleado</option>
+            </select>
+          </label>
+
+          <label class="block space-y-2" *ngIf="compareType === 'DEPARTMENT'">
+            <span class="ts-label text-sm font-semibold text-[#0F172A]">Departamento de comparación</span>
+            <select
+              class="ts-select rounded-xl border border-[#D7DFEA] bg-white px-4 py-2.5 text-[#1E293B] w-full"
+              [(ngModel)]="compareDepartmentId"
+              (ngModelChange)="onCompareDepartmentChange($event)"
+              panelClass="ts-select-panel"
+            >
+              <option [ngValue]="null">Selecciona departamento...</option>
+              <option *ngFor="let dept of departments(); trackBy: trackById" [ngValue]="dept.id">
+                {{ dept.nombre }}
+              </option>
+            </select>
+          </label>
+
+          <label class="block space-y-2" *ngIf="compareType === 'EMPLOYEE'">
+            <span class="ts-label text-sm font-semibold text-[#0F172A]">Empleado de comparación</span>
+            <select
+              class="ts-select rounded-xl border border-[#D7DFEA] bg-white px-4 py-2.5 text-[#1E293B] w-full"
+              [(ngModel)]="compareEmployeeId"
+              (ngModelChange)="onCompareEmployeeChange($event)"
+              panelClass="ts-select-panel"
+            >
+              <option [ngValue]="null">Selecciona empleado...</option>
+              <option *ngFor="let emp of filteredEmployees(); trackBy: trackById" [ngValue]="emp?.id ?? null">
+                {{ emp ? formatEmployeeIdentity(emp) : 'Empleado inválido' }}
+              </option>
+            </select>
+          </label>
+
+          <div *ngIf="comparisonError()" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            {{ comparisonError() }}
+          </div>
+
+          <button
+            *ngIf="hasComparison()"
+            type="button"
+            class="text-xs text-[#64748B] hover:text-[#0F172A] underline"
+            (click)="clearComparison()"
+          >
+            Limpiar comparación
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensajes de info/error -->
+      <div *ngIf="info()" class="rounded-xl border border-border bg-[#F8FAFC] px-4 py-3 text-sm text-muted">
+        {{ info() }}
+      </div>
+      <div *ngIf="error()" class="rounded-md border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+        {{ error() }}
+      </div>
+
+      <!-- Zona de acciones -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-200">
+        <div class="text-xs text-neutral-500">
+          <span *ngIf="activeFiltersCount() === 0">Sin filtros aplicados</span>
+          <span *ngIf="activeFiltersCount() > 0">Filtros activos: {{ activeFiltersCount() }}</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button class="ts-btn ts-btn--secondary" type="button" (click)="refreshCurrentFilter()" [disabled]="loading()">
+            Actualizar datos
+          </button>
+          <button class="ts-btn" type="button" (click)="openReportModal()" [disabled]="loading() || !analytics()">
+            Generar informes
+          </button>
+          <button class="ts-btn ts-btn--secondary" type="button" (click)="clearFilters()" [disabled]="loading()">
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chip de filtro por colaborador -->
+    <div *ngIf="selectedEmployeeId && getSelectedEmployeeName()" class="flex items-center gap-2 animate-subtleUp">
+      <div class="ts-chip border-primary/30 bg-primary/10 text-primary">
+        <span>Filtrando por: <strong>{{ getSelectedEmployeeName() }}</strong></span>
+        <button
+          type="button"
+          class="ml-1.5 -mr-1 rounded-full p-0.5 hover:bg-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
+          (click)="clearEmployeeFilter()"
+          aria-label="Limpiar filtro de colaborador"
+        >
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 2: Resultados del dashboard -->
+    <section id="analytics-export" class="ts-card space-y-6 animate-subtleUp" *ngIf="!loading(); else loadingState">
+      <div class="space-y-1">
+        <h2 class="text-lg font-semibold text-ink">Resultados del dashboard</h2>
+        <p class="text-sm text-muted">Métricas y visualizaciones basadas en los filtros aplicados.</p>
+      </div>
+
+      <ng-container *ngIf="analytics(); else emptyState">
+        <!-- KPIs principales -->
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ng-container *ngFor="let card of kpiCards(); trackBy: trackByIndex">
+            <div 
+              class="rounded-2xl border bg-white px-4 py-3 shadow-[0_6px_18px_rgba(2,6,23,0.06)]" 
+              [class.relative]="card.color"
+              [style.border-color]="card.color || '#E2E8F0'"
+              [style.border-width]="card.color ? '2px' : '1px'"
+            >
+              <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#64748B]">{{ card.label }}</p>
+              <div class="mt-1 flex items-baseline gap-2">
+                <span class="text-2xl font-semibold" [style.color]="card.color || '#0F172A'">{{ card.value }}</span>
+                <span *ngIf="card.suffix" class="text-xs font-medium text-[#94A3B8]">{{ card.suffix }}</span>
+              </div>
+              <!-- Indicador de color para Estadio actual -->
+              <div *ngIf="card.color && card.label === 'Estadio actual'" class="absolute top-3 right-3 w-3 h-3 rounded-full" [style.background-color]="card.color"></div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Estadios Likert -->
+        <app-likert-buckets
+          [employees]="likertBucketEmployees()"
+          [filter]="likertBucketsFilter()"
+          [selectedEmployeeId]="selectedEmployeeId"
+          (employeeClick)="onLikertEmployeeClick($event)"
+        ></app-likert-buckets>
+
+        <!-- Resumen del filtro actual -->
+        <div class="ts-card space-y-3 min-w-0 animate-subtleUp" *ngIf="shouldShowFilterSummary()">
+          <div class="space-y-1">
+            <h2 class="text-lg font-semibold text-ink">Resumen del filtro actual</h2>
+            <p class="text-sm text-muted">Aplicado a todos los graficos y KPIs.</p>
+          </div>
+          <ul class="text-sm text-muted space-y-1">
+            <li *ngFor="let item of filterSummary(); trackBy: trackByIndex">{{ item }}</li>
+          </ul>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-12">
+          <div class="ts-card ts-card--flush space-y-4 xl:col-span-7 min-w-0 animate-subtleUp">
+            <div class="space-y-1 px-6">
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg font-semibold text-ink">Desempeno por pilar</h2>
+                <span *ngIf="hasComparison()" class="ts-chip border-primary/30 bg-primary/10 text-primary text-xs px-2 py-0.5">
+                  Comparación activa
+                </span>
+              </div>
+              <p class="text-sm text-muted">Promedio ponderado por pregunta. Clic para filtrar.</p>
+              <p *ngIf="hasComparison()" class="text-sm text-muted mt-1">
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full" [style.background-color]="'#3B82F6'"></span>
+                  <strong>{{ getMainFilterName() }}</strong>
+                </span>
+                <span class="mx-2">vs</span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full" [style.background-color]="'#64748B'"></span>
+                  <strong>{{ getComparisonFilterName() }}</strong>
+                </span>
+              </p>
+            </div>
+            <div class="px-0">
+              <echarts
+                class="block h-[26rem] w-full animate-fadeIn"
+                [theme]="'tsMono'"
+                [options]="barPillarOption()"
+                [initOpts]="chartInitOpts"
+                [autoResize]="true"
+                (chartClick)="onPillarBarClick($event)"
+              ></echarts>
+            </div>
+          </div>
+
+          <div class="ts-card ts-card--flush space-y-4 xl:col-span-5 min-w-0 animate-subtleUp">
+            <div class="space-y-1 px-6">
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg font-semibold text-ink">Equilibrio organizacional</h2>
+                <span *ngIf="hasComparison()" class="ts-chip border-primary/30 bg-primary/10 text-primary text-xs px-2 py-0.5">
+                  Comparación activa
+                </span>
+              </div>
+              <p class="text-sm text-muted">Comparativa radial de los pilares.</p>
+              <p *ngIf="hasComparison()" class="text-sm text-muted mt-1">
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full" [style.background-color]="'#3B82F6'"></span>
+                  <strong>{{ getMainFilterName() }}</strong>
+                </span>
+                <span class="mx-2">vs</span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full" [style.background-color]="'#64748B'"></span>
+                  <strong>{{ getComparisonFilterName() }}</strong>
+                </span>
+              </p>
+            </div>
+            <div class="px-0">
+              <echarts
+                class="block h-[26rem] w-full animate-fadeIn"
+                [theme]="'tsMono'"
+                [options]="radarBalanceOption()"
+                [initOpts]="chartInitOpts"
+                [autoResize]="true"
+              ></echarts>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-12">
+          <div class="ts-card ts-card--flush space-y-4 xl:col-span-7 min-w-0 animate-subtleUp">
+            <div class="space-y-1 px-6">
+              <h2 class="text-lg font-semibold text-ink">Heatmap Pilar × Departamento</h2>
+              <p class="text-sm text-muted">Detecta brechas especificas. Clic para profundizar.</p>
+            </div>
+            <div class="px-0">
+              <echarts
+                class="block h-[28rem] w-full animate-fadeIn"
+                [theme]="'tsMono'"
+                [options]="heatmapOption()"
+                [initOpts]="chartInitOpts"
+                [autoResize]="true"
+                (chartClick)="onHeatmapClick($event)"
+              ></echarts>
+            </div>
+          </div>
+
+          <div class="ts-card ts-card--flush space-y-4 xl:col-span-5 min-w-0 animate-subtleUp">
+            <div class="space-y-1 px-6">
+              <h2 class="text-lg font-semibold text-ink">Distribucion por nivel</h2>
+              <p class="text-sm text-muted">Composicion Likert de cada pilar. Ordenado por % ≥4.</p>
+            </div>
+            <div class="px-0">
+              <echarts
+                class="block h-[28rem] w-full animate-fadeIn"
+                [theme]="'tsMono'"
+                [options]="distributionOption()"
+                [initOpts]="chartInitOpts"
+                [autoResize]="true"
+              ></echarts>
+            </div>
+          </div>
+        </div>
+
+        <div class="ts-card ts-card--flush space-y-4 min-w-0 animate-subtleUp">
+          <div class="space-y-1 px-6">
+            <h2 class="text-lg font-semibold text-ink">Participación real por departamento</h2>
+            <p class="text-sm text-muted">Total de colaboradores, respondentes y porcentaje de participación.</p>
+            <p *ngIf="allDepartmentsAt100()" class="text-sm font-medium text-emerald-600 mt-2">
+              Todos los departamentos alcanzaron el 100% de participación.
+            </p>
+          </div>
+          <div class="px-0">
+            <echarts
+              class="block h-[28rem] w-full animate-fadeIn"
+              [theme]="'tsMono'"
+              [options]="departmentParticipationOption()"
+              [initOpts]="chartInitOpts"
+              [autoResize]="true"
+            ></echarts>
+          </div>
+        </div>
+
+        <!-- Mapa organizacional (Treemap) -->
+        <div class="ts-card ts-card--flush space-y-4 min-w-0 animate-subtleUp">
+          <div class="space-y-1 px-6">
+            <h2 class="text-lg font-semibold text-ink">Mapa organizacional (Treemap)</h2>
+            <p class="text-sm text-muted">Estructura jerárquica Empresa/Departamento/Colaboradores según filtros aplicados.</p>
+          </div>
+          <div class="px-0">
+            <echarts
+              class="block h-[28rem] w-full animate-fadeIn"
+              [theme]="'tsMono'"
+              [options]="organizationalTreemapOption()"
+              [initOpts]="chartInitOpts"
+              [autoResize]="true"
+            ></echarts>
+          </div>
+        </div>
+
+        <!-- Matriz Impacto vs Desempeño -->
+        <div class="ts-card ts-card--flush space-y-4 min-w-0 animate-subtleUp">
+          <div class="space-y-1 px-6">
+            <h2 class="text-lg font-semibold text-ink">Matriz Impacto vs Desempeño</h2>
+            <p class="text-sm text-muted">Análisis de pilares según desempeño e importancia.</p>
+          </div>
+          <div class="px-0">
+            <echarts
+              class="block h-[28rem] w-full animate-fadeIn"
+              [theme]="'tsMono'"
+              [options]="impactPerformanceMatrixOption()"
+              [initOpts]="chartInitOpts"
+              [autoResize]="true"
+            ></echarts>
+          </div>
+        </div>
+
+        <!-- Correlación entre pilares -->
+        <div class="ts-card ts-card--flush space-y-4 min-w-0 animate-subtleUp">
+          <div class="space-y-1 px-6">
+            <h2 class="text-lg font-semibold text-ink">Correlación entre pilares</h2>
+            <p class="text-sm text-muted">Matriz de correlación entre los promedios de los pilares.</p>
+          </div>
+          <div class="px-0">
+            <echarts
+              class="block h-[28rem] w-full animate-fadeIn"
+              [theme]="'tsMono'"
+              [options]="pillarCorrelationOption()"
+              [initOpts]="chartInitOpts"
+              [autoResize]="true"
+            ></echarts>
+          </div>
+        </div>
+
+        <div class="ts-card space-y-4 min-w-0 animate-subtleUp">
+          <div class="space-y-1">
+            <h2 class="text-lg font-semibold text-ink">Ranking de departamentos</h2>
+            <p class="text-sm text-muted">Top 5 y areas a reforzar segun el filtro actual.</p>
+          </div>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 class="font-semibold text-emerald-600">Top 5</h3>
+              <div class="space-y-3" *ngIf="rankingTop().length; else rankingEmpty">
+                <ng-container *ngFor="let item of rankingTop(); trackBy: trackById">
+                  <div class="flex justify-between text-sm font-medium text-ink">
+                    <span class="mr-3 line-clamp-1">{{ item.name }}</span>
+                    <span>{{ formatPercent(item.value) }}</span>
+                  </div>
+                  <div class="h-2 rounded bg-slate-200">
+                    <div class="h-full rounded bg-emerald-500" [style.width.%]="item.value"></div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-semibold text-rose-600">Areas a reforzar</h3>
+              <div class="space-y-3" *ngIf="rankingBottom().length; else rankingEmpty">
+                <ng-container *ngFor="let item of rankingBottom(); trackBy: trackById">
+                  <div class="flex justify-between text-sm font-medium text-ink">
+                    <span class="mr-3 line-clamp-1">{{ item.name }}</span>
+                    <span>{{ formatPercent(item.value) }}</span>
+                  </div>
+                  <div class="h-2 rounded bg-slate-200">
+                    <div class="h-full rounded bg-rose-500" [style.width.%]="item.value"></div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+          <ng-template #rankingEmpty>
+            <p class="text-sm text-muted">Sin datos suficientes.</p>
+          </ng-template>
+        </div>
+
+        <div class="ts-card space-y-4 min-w-0 animate-subtleUp" *ngIf="hasEmployeesDistribution()">
+          <div class="space-y-1">
+            <h2 class="text-lg font-semibold text-ink">Dispersión de empleados</h2>
+            <p class="text-sm text-muted">Promedio individual y estadio asociado.</p>
+          </div>
+          <echarts
+            class="block h-[26rem] w-full animate-fadeIn"
+            [theme]="'tsMono'"
+            [options]="employeeScatterOption()"
+            [initOpts]="chartInitOpts"
+            [autoResize]="true"
+          ></echarts>
+        </div>
+      </ng-container>
+    </section>
+
+    <!-- Estado de carga -->
+    <ng-template #loadingState>
+      <section class="ts-card space-y-4">
+        <div class="animate-pulse space-y-4">
+          <div class="h-4 w-1/4 rounded bg-border"></div>
+          <div class="h-72 rounded-lg bg-border"></div>
+        </div>
+      </section>
+    </ng-template>
+
+    <!-- Estado vacío -->
+    <ng-template #emptyState>
+      <section class="ts-card text-center text-sm text-muted">
+        No encontramos resultados para los filtros aplicados. Ajusta los criterios o espera nuevas respuestas.
+      </section>
+    </ng-template>
+  </div>
+
+  <!-- Modal de generación de informes -->
+  <ts-modal title="Generar informes" [open]="reportModalOpen()" (close)="closeReportModal()">
+    <div class="space-y-6">
+      <div class="space-y-3">
+        <p class="text-sm text-muted">Selecciona uno o varios formatos para exportar:</p>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 cursor-pointer rounded-lg border border-border p-3 hover:bg-[#F8FAFC] transition-colors">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+              [(ngModel)]="selectedFormats.pdf"
+            />
+            <div class="flex-1">
+              <span class="font-semibold text-ink">PDF</span>
+              <p class="text-xs text-muted">Informe visual con gráficos bien distribuidos</p>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer rounded-lg border border-border p-3 hover:bg-[#F8FAFC] transition-colors">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+              [(ngModel)]="selectedFormats.csv"
+            />
+            <div class="flex-1">
+              <span class="font-semibold text-ink">CSV</span>
+              <p class="text-xs text-muted">Todos los datos de encuestas en formato CSV</p>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer rounded-lg border border-border p-3 hover:bg-[#F8FAFC] transition-colors">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+              [(ngModel)]="selectedFormats.json"
+            />
+            <div class="flex-1">
+              <span class="font-semibold text-ink">JSON</span>
+              <p class="text-xs text-muted">Todos los datos de encuestas en formato JSON</p>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer rounded-lg border border-border p-3 hover:bg-[#F8FAFC] transition-colors">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+              [(ngModel)]="selectedFormats.xml"
+            />
+            <div class="flex-1">
+              <span class="font-semibold text-ink">XML</span>
+              <p class="text-xs text-muted">Todos los datos de encuestas en formato XML</p>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer rounded-lg border border-border p-3 hover:bg-[#F8FAFC] transition-colors">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+              [(ngModel)]="selectedFormats.excel"
+            />
+            <div class="flex-1">
+              <span class="font-semibold text-ink">Excel</span>
+              <p class="text-xs text-muted">Datos y gráficos combinados en archivo Excel</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div *ngIf="reportError()" class="rounded-md border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+        {{ reportError() }}
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          class="ts-btn ts-btn--secondary"
+          (click)="closeReportModal()"
+          [disabled]="generatingReports()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="ts-btn"
+          (click)="generateReports()"
+          [disabled]="generatingReports() || !hasSelectedFormats()"
+        >
+          {{ generatingReports() ? 'Generando...' : 'Generar informes' }}
+        </button>
+      </div>
+    </div>
+  </ts-modal>
+
+  <!-- Modal de comprobante -->
+  <ts-modal title="Comprobante de exportación" [open]="receiptModalOpen()" (close)="closeReceiptModal()">
+    <div class="space-y-4" *ngIf="exportReceipt()">
+      <div class="rounded-xl border border-border bg-[#F8FAFC] p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-border pb-2">
+          <span class="text-sm font-semibold text-ink">Usuario:</span>
+          <span class="text-sm text-muted">{{ exportReceipt()!.usuario }}</span>
+        </div>
+        <div class="flex items-center justify-between border-b border-border pb-2">
+          <span class="text-sm font-semibold text-ink">Fecha y hora:</span>
+          <span class="text-sm text-muted">{{ exportReceipt()!.fechaHora }}</span>
+        </div>
+        <div class="space-y-2">
+          <span class="text-sm font-semibold text-ink block">Filtros aplicados:</span>
+          <ul class="text-sm text-muted space-y-1 ml-4">
+            <li *ngFor="let filter of exportReceipt()!.filtros" class="list-disc">{{ filter }}</li>
+          </ul>
+        </div>
+        <div class="space-y-2 pt-2 border-t border-border">
+          <span class="text-sm font-semibold text-ink block">Formatos generados:</span>
+          <div class="flex flex-wrap gap-2">
+            <span
+              *ngFor="let format of exportReceipt()!.formatos"
+              class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+            >
+              {{ format }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button type="button" class="ts-btn" (click)="closeReceiptModal()">Cerrar</button>
+      </div>
+    </div>
+  </ts-modal>
+</div>

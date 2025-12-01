@@ -1,0 +1,423 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #ffffff;
+    --ink: #0f0f0f;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --ts-surface: #ffffff;
+    --ts-text: #1E293B;
+    --ts-shadow: 0 10px 24px rgba(2, 6, 23, 0.08);
+    color-scheme: light;
+    font-feature-settings: 'rlig' 1, 'kern' 1;
+  }
+
+  html,
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  body {
+    @apply font-sans text-base antialiased;
+  }
+
+  h1 {
+    @apply text-4xl font-semibold tracking-[-0.01em];
+  }
+
+  h2 {
+    @apply text-3xl font-semibold tracking-[-0.01em];
+  }
+
+  h3 {
+    @apply text-2xl font-medium;
+  }
+
+  h4 {
+    @apply text-xl font-medium;
+  }
+
+  a {
+    @apply text-ink transition-colors duration-200 hover:text-ink/80;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    @apply text-base;
+  }
+
+  ::selection {
+    background: var(--ink);
+    color: var(--bg);
+  }
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow), 0 0 0 3px rgba(17, 17, 17, 0.18);
+  border-radius: 0.5rem;
+}
+
+@keyframes subtleUp {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes halo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(15, 15, 15, 0.12);
+  }
+  100% {
+    box-shadow: 0 0 0 24px rgba(15, 15, 15, 0);
+  }
+}
+
+@keyframes scrollIndicator {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes sphereFloat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(6deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes sphereRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@layer components {
+  .ts-page {
+    @apply min-h-[calc(100vh-4rem)] bg-bg py-8 px-4 md:px-8;
+  }
+
+  .ts-container {
+    @apply mx-auto w-full max-w-6xl space-y-6;
+  }
+
+  .ts-card {
+    @apply bg-white border border-border rounded-2xl shadow-card p-6 transition-transform duration-200;
+  }
+
+  .ts-card--flush {
+    @apply px-0;
+  }
+
+  .ts-card-muted {
+    @apply bg-white border border-border rounded-2xl p-6 shadow-card;
+  }
+
+  .ts-title {
+    @apply text-2xl font-semibold text-ink;
+  }
+
+  .ts-subtitle {
+    @apply text-sm text-muted;
+  }
+
+  .ts-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill border border-ink bg-white px-5 py-2.5 text-sm font-medium text-ink transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .ts-btn--secondary {
+    @apply border border-border text-ink;
+  }
+
+  .ts-btn--ghost {
+    @apply bg-transparent text-muted border border-transparent;
+  }
+
+  .ts-btn--positive {
+    @apply border border-success/40 bg-white text-[#0b7a56] hover:bg-success/15 hover:text-[#0b7a56];
+  }
+
+  .ts-btn--danger {
+    @apply border border-error/40 bg-white text-error hover:bg-error/10 hover:text-error;
+  }
+
+  .ts-btn--danger {
+    @apply border border-error/30 bg-white text-error hover:bg-error/10 hover:text-error;
+  }
+
+  .ts-chip {
+    @apply inline-flex items-center gap-2 rounded-pill border border-border bg-white px-3 py-1.5 text-sm text-muted shadow-card;
+  }
+
+  .ts-input {
+    @apply w-full rounded-xl border border-border bg-white px-3 py-2.5 text-sm text-ink placeholder:text-muted transition-all;
+  }
+
+  .ts-select {
+    @apply ts-input appearance-none;
+  }
+
+  .ts-label {
+    @apply text-xs font-medium uppercase tracking-[0.08em] text-muted;
+  }
+
+  .ts-table {
+    @apply w-full text-sm;
+  }
+
+  .ts-table thead th {
+    @apply text-left font-semibold text-muted border-b border-border pb-2;
+  }
+
+  .ts-table tbody tr {
+    @apply transition-colors duration-200 hover:bg-[#f6f6f6];
+  }
+
+  .ts-table tbody td {
+    @apply border-b border-border py-1.5 align-middle;
+  }
+
+  /* Menú de acciones: overlay flotante que no afecta el layout */
+  .user-actions-dropdown {
+    /* Position fixed para que flote sobre todo sin afectar el layout */
+    position: fixed;
+    /* Asegurar que el menú se vea por encima de todo (tarjetas, modales, etc.) */
+    z-index: 1000;
+    /* Estilos base del menú */
+    min-w: 180px;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    background-color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 0.25rem 0;
+    /* Evitar que el menú se desborde de la pantalla */
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    /* Asegurar que el menú tenga un fondo sólido */
+    background-color: white;
+    /* Eliminar cualquier margen o padding que pueda afectar el posicionamiento */
+    margin: 0;
+  }
+
+  /* Variante del menú cuando se abre hacia arriba */
+  .user-actions-dropdown--top {
+    /* Mantener los mismos estilos pero con posición ajustada */
+  }
+
+  .ts-badge {
+    @apply inline-flex items-center gap-1 rounded-pill border border-border bg-white px-2.5 py-1 text-xs font-medium text-muted;
+  }
+}
+
+.ts-card.animate-subtleUp,
+.ts-card.animate-fadeIn {
+  animation-duration: 0.28s;
+}
+
+.ts-card:hover {
+  transform: translateY(-1px);
+}
+
+.home-scroll-indicator {
+  outline: none !important;
+}
+
+.home-scroll-indicator:focus,
+.home-scroll-indicator:focus-visible,
+.home-scroll-indicator:active {
+  outline: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+.scroll-indicator {
+  animation: pulse 3.2s ease-out infinite;
+}
+
+.scroll-indicator > lucide-icon {
+  animation: scrollIndicator 2s ease-in-out infinite;
+}
+
+/* Skeleton loader para usuarios */
+.users-skeleton-row {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.users-skeleton-row td {
+  padding: 0.75rem 0.5rem;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.ts-btn:hover {
+  @apply bg-ink text-white;
+}
+
+.ts-btn--secondary:hover {
+  @apply bg-[#f6f6f6];
+}
+
+.ts-btn--ghost:hover {
+  @apply border-border bg-[#f7f7f7] text-ink;
+}
+
+/* Botones de la card CTA "¿Listo para mapear tu ruta digital?" */
+.cta-card-button {
+  background-color: #ffffff !important;
+  border-color: #0f0f0f !important;
+  color: #0f0f0f !important;
+}
+
+.cta-card-button:hover {
+  background-color: #ffffff !important;
+  border-color: #0f0f0f !important;
+  color: #0f0f0f !important;
+}
+
+.cta-card-button:focus {
+  background-color: #ffffff !important;
+  border-color: #0f0f0f !important;
+  color: #0f0f0f !important;
+}
+
+.ts-input:focus {
+  box-shadow: var(--shadow), var(--shadow);
+  outline: none;
+}
+
+.ts-hero-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ts-hero-logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  animation: halo 3.2s ease-out infinite;
+  pointer-events: none;
+}
+
+.cdk-overlay-container {
+  color-scheme: light;
+}
+
+.cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+  background: rgba(15, 23, 42, 0.15);
+}
+
+/* Esfera 3D wireframe decorativa del hero */
+.sphere-wrapper {
+  position: fixed;
+  bottom: -65%;
+  right: -25%;
+  
+  /* La esfera escala según el ancho de la pantalla */
+  width: 75vw;
+  height: 75vw;
+  
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0; /* El contenido del hero debe tener z-index mayor */
+}
+
+/* El canvas del componente 3D debe llenar el wrapper */
+.sphere-wrapper canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0.75;
+}
+
+@media (max-width: 1400px) {
+  .sphere-wrapper {
+    width: 80vw;
+    height: 80vw;
+  }
+}
+
+@media (max-width: 1024px) {
+  .sphere-wrapper {
+    width: 90vw;
+    height: 90vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .sphere-wrapper {
+    display: none;
+  }
+}
+
+.ts-select-panel,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.ng-dropdown-panel {
+  background: var(--ts-surface) !important;
+  color: var(--ts-text) !important;
+  box-shadow: var(--ts-shadow) !important;
+  animation: none !important;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
